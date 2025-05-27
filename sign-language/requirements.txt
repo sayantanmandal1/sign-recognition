@@ -1,0 +1,6 @@
+flask==2.0.1
+tensorflow==2.8.0
+opencv-python==4.5.5.64
+numpy==1.22.3
+gtts==2.2.4
+flask-cors==3.0.10

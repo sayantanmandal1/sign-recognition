@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Language Translator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #4267B2;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-radius: 5px;
+        }
+        h1 {
+            margin: 0;
+        }
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .video-container {
+            flex: 1;
+            min-width: 300px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .controls {
+            flex: 1;
+            min-width: 300px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .output {
+            flex: 100%;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        #videoElement, #capturedImage {
+            width: 100%;
+            height: auto;
+            background-color: #000;
+            border-radius: 5px;
+        }
+        #capturedImage {
+            display: none;
+            max-height: 400px;
+            object-fit: contain;
+        }
+        .btn {
+            background-color: #4267B2;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: #365899;
+        }
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .recognition-box {
+            border: 2px solid #4267B2;
+            position: absolute;
+            pointer-events: none;
+        }
+        .image-upload {
+            margin: 20px 0;
+        }
+        #fileInput {
+            display: none;
+        }
+        .upload-btn {
+            display: inline-block;
+            background-color: #4267B2;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .upload-btn:hover {
+            background-color: #365899;
+        }
+        #fileName {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .mode-toggle {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .mode-toggle button {
+            flex: 1;
+            background-color: #e9e9e9;
+            color: #333;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+        .mode-toggle button.active {
+            background-color: #4267B2;
+            color: white;
+        }
+        .mode-toggle button:first-child {
+            border-radius: 5px 0 0 5px;
+        }
+        .mode-toggle button:last-child {
+            border-radius: 0 5px 5px 0;
+        }
+        #textOutput {
+            font-size: 24px;
+            margin-bottom: 20px;
+            min-height: 100px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        #currentWord {
+            color: #4267B2;
+            font-weight: bold;
+        }
+        .settings {
+            margin-top: 20px;
+        }
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .toggle-container label {
+            margin-left: 10px;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #4267B2;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4267B2;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #letterPrediction {
+            font-size: 48px;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #4267B2;
+        }
+        #predictionScore {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .video-wrapper {
+            position: relative;
+        }
+        .camera-box {
+            position: absolute;
+            border: 3px solid #4CAF50;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sign Language Translator</h1>
+            <p>Convert sign language to text and speech in real-time</p>
+        </header>
+
+        <div class="main-content">
+            <div class="video-container">
+                <div class="mode-toggle">
+                    <button id="streamModeBtn" class="active">Live Camera</button>
+                    <button id="uploadModeBtn">Upload Image</button>
+                </div>
+
+                <div id="streamMode">
+                    <div class="video-wrapper">
+                        <video id="videoElement" autoplay></video>
+                        <div id="cameraBox" class="camera-box"></div>
+                    </div>
+                    <button id="startCameraBtn" class="btn">Start Camera</button>
+                    <button id="captureBtnLive" class="btn" disabled>Capture Sign</button>
+                    <button id="toggleRealTimeBtn" class="btn">Enable Real-Time Recognition</button>
+                </div>
+
+                <div id="uploadMode" style="display: none;">
+                    <img id="capturedImage" alt="Captured image will appear here">
+                    <div class="image-upload">
+                        <label for="fileInput" class="upload-btn">Choose Image</label>
+                        <input type="file" id="fileInput" accept="image/*">
+                        <span id="fileName">No file chosen</span>
+                    </div>
+                    <button id="processImageBtn" class="btn" disabled>Process Image</button>
+                </div>
+
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Processing...</p>
+                </div>
+
+                <div id="letterPrediction"></div>
+                <div id="predictionScore"></div>
+            </div>
+
+            <div class="controls">
+                <h2>Output Controls</h2>
+                <button id="addSpaceBtn" class="btn">Add Space</button>
+                <button id="deleteLastBtn" class="btn">Delete Last Letter</button>
+                <button id="clearBtn" class="btn">Clear All</button>
+                <button id="speakBtn" class="btn">Speak Text</button>
+
+                <div class="settings">
+                    <h3>Settings</h3>
+                    <div class="toggle-container">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="spellCheckToggle">
+                            <span class="slider"></span>
+                        </label>
+                        <label for="spellCheckToggle">Enable Spell Check</label>
+                    </div>
+                    <div class="toggle-container">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoSpeakToggle">
+                            <span class="slider"></span>
+                        </label>
+                        <label for="autoSpeakToggle">Auto-Speak Words</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="output">
+                <h2>Recognized Text</h2>
+                <div id="textOutput">
+                    <span id="completedText"></span> <span id="currentWord"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const videoElement = document.getElementById('videoElement');
+        const capturedImage = document.getElementById('capturedImage');
+        const startCameraBtn = document.getElementById('startCameraBtn');
+        const captureBtnLive = document.getElementById('captureBtnLive');
+        const toggleRealTimeBtn = document.getElementById('toggleRealTimeBtn');
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const processImageBtn = document.getElementById('processImageBtn');
+        const streamModeBtn = document.getElementById('streamModeBtn');
+        const uploadModeBtn = document.getElementById('uploadModeBtn');
+        const streamMode = document.getElementById('streamMode');
+        const uploadMode = document.getElementById('uploadMode');
+        const addSpaceBtn = document.getElementById('addSpaceBtn');
+        const deleteLastBtn = document.getElementById('deleteLastBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const speakBtn = document.getElementById('speakBtn');
+        const spellCheckToggle = document.getElementById('spellCheckToggle');
+        const autoSpeakToggle = document.getElementById('autoSpeakToggle');
+        const completedText = document.getElementById('completedText');
+        const currentWord = document.getElementById('currentWord');
+        const letterPrediction = document.getElementById('letterPrediction');
+        const predictionScore = document.getElementById('predictionScore');
+        const cameraBox = document.getElementById('cameraBox');
+        const loadingElement = document.querySelector('.loading');
+
+        // Global variables
+        let stream = null;
+        let isRealTimeEnabled = false;
+        let realTimeInterval = null;
+        let letterHistory = [];
+        let currentWordText = '';
+        let completedTextContent = '';
+
+        // Dictionary for spell checking (simplified implementation)
+        const dictionary = {
+            'HELO': 'HELLO',
+            'THER': 'THERE',
+            'WRD': 'WORD',
+            'GUD': 'GOOD',
+            'MORNNG': 'MORNING',
+            'HI': 'HI',
+            'THANKS': 'THANKS',
+            'YU': 'YOU',
+            'HAV': 'HAVE',
+            'NICE': 'NICE',
+            'DAY': 'DAY'
+            // Add more words as needed
+        };
+
+        // Initialize camera box position
+        function initCameraBox() {
+            const videoWidth = videoElement.offsetWidth;
+            const videoHeight = videoElement.offsetHeight;
+            const boxSize = Math.min(videoWidth, videoHeight) * 0.6;
+            
+            cameraBox.style.width = boxSize + 'px';
+            cameraBox.style.height = boxSize + 'px';
+            cameraBox.style.left = ((videoWidth - boxSize) / 2) + 'px';
+            cameraBox.style.top = ((videoHeight - boxSize) / 2) + 'px';
+        }
+
+        // Event listeners
+        startCameraBtn.addEventListener('click', toggleCamera);
+        captureBtnLive.addEventListener('click', captureImage);
+        toggleRealTimeBtn.addEventListener('click', toggleRealTime);
+        fileInput.addEventListener('change', handleFileSelection);
+        processImageBtn.addEventListener('click', processUploadedImage);
+        streamModeBtn.addEventListener('click', () => switchMode('stream'));
+        uploadModeBtn.addEventListener('click', () => switchMode('upload'));
+        addSpaceBtn.addEventListener('click', addSpace);
+        deleteLastBtn.addEventListener('click', deleteLastLetter);
+        clearBtn.addEventListener('click', clearText);
+        speakBtn.addEventListener('click', speakText);
+
+        // Switch between stream and upload modes
+        function switchMode(mode) {
+            if (mode === 'stream') {
+                streamMode.style.display = 'block';
+                uploadMode.style.display = 'none';
+                streamModeBtn.classList.add('active');
+                uploadModeBtn.classList.remove('active');
+            } else {
+                streamMode.style.display = 'none';
+                uploadMode.style.display = 'block';
+                streamModeBtn.classList.remove('active');
+                uploadModeBtn.classList.add('active');
+                stopCamera();
+            }
+        }
+
+        // Start or stop the camera
+        function toggleCamera() {
+            if (stream) {
+                stopCamera();
+                startCameraBtn.textContent = 'Start Camera';
+            } else {
+                startCamera();
+            }
+        }
+
+        // Start the camera
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(mediaStream) {
+                    stream = mediaStream;
+                    videoElement.srcObject = mediaStream;
+                    startCameraBtn.textContent = 'Stop Camera';
+                    captureBtnLive.disabled = false;
+                    initCameraBox();
+                })
+                .catch(function(error) {
+                    console.error('Error accessing the camera:', error);
+                    alert('Could not access the camera. Please make sure you have granted permission.');
+                });
+        }
+
+        // Stop the camera
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                videoElement.srcObject = null;
+                captureBtnLive.disabled = true;
+                
+                // Disable real-time recognition if it's on
+                if (isRealTimeEnabled) {
+                    toggleRealTime();
+                }
+            }
+        }
+
+        // Toggle real-time recognition
+        function toggleRealTime() {
+            if (!stream) {
+                alert('Please start the camera first');
+                return;
+            }
+
+            isRealTimeEnabled = !isRealTimeEnabled;
+            
+            if (isRealTimeEnabled) {
+                toggleRealTimeBtn.textContent = 'Disable Real-Time Recognition';
+                toggleRealTimeBtn.style.backgroundColor = '#E91E63';
+                realTimeInterval = setInterval(processRealTimeFrame, 1000); // Process every second
+            } else {
+                toggleRealTimeBtn.textContent = 'Enable Real-Time Recognition';
+                toggleRealTimeBtn.style.backgroundColor = '#4267B2';
+                clearInterval(realTimeInterval);
+            }
+        }
+
+        // Process frame in real-time
+        function processRealTimeFrame() {
+            if (!stream) return;
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            // Set canvas dimensions to match video
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            
+            // Draw video frame to canvas
+            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            
+            // Get the region of interest based on camera box position
+            const boxRect = cameraBox.getBoundingClientRect();
+            const videoRect = videoElement.getBoundingClientRect();
+            
+            // Calculate scale factors between display size and actual video dimensions
+            const scaleX = videoElement.videoWidth / videoRect.width;
+            const scaleY = videoElement.videoHeight / videoRect.height;
+            
+            // Calculate the ROI coordinates in the actual video dimensions
+            const x = (boxRect.left - videoRect.left) * scaleX;
+            const y = (boxRect.top - videoRect.top) * scaleY;
+            const width = boxRect.width * scaleX;
+            const height = boxRect.height * scaleY;
+            
+            // Create a new canvas for the cropped image
+            const croppedCanvas = document.createElement('canvas');
+            croppedCanvas.width = 200; // Match the expected input size in your backend
+            croppedCanvas.height = 200;
+            
+            // Draw the cropped region to the new canvas, resizing it
+            const croppedContext = croppedCanvas.getContext('2d');
+            croppedContext.drawImage(canvas, x, y, width, height, 0, 0, 200, 200);
+            
+            // Convert to base64 for processing
+            const imageData = croppedCanvas.toDataURL('image/jpeg');
+            
+            // Process the image data (simulate backend processing)
+            processImageData(imageData, true);
+        }
+
+        // Capture image from camera
+        function captureImage() {
+            if (!stream) return;
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            
+            const context = canvas.getContext('2d');
+            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            
+            // Get the region of interest based on camera box position
+            const boxRect = cameraBox.getBoundingClientRect();
+            const videoRect = videoElement.getBoundingClientRect();
+            
+            // Calculate scale factors
+            const scaleX = videoElement.videoWidth / videoRect.width;
+            const scaleY = videoElement.videoHeight / videoRect.height;
+            
+            // Calculate the ROI coordinates in the actual video dimensions
+            const x = (boxRect.left - videoRect.left) * scaleX;
+            const y = (boxRect.top - videoRect.top) * scaleY;
+            const width = boxRect.width * scaleX;
+            const height = boxRect.height * scaleY;
+            
+            // Create a new canvas for the cropped image
+            const croppedCanvas = document.createElement('canvas');
+            croppedCanvas.width = 200;
+            croppedCanvas.height = 200;
+            
+            // Draw the cropped region to the new canvas, resizing it
+            const croppedContext = croppedCanvas.getContext('2d');
+            croppedContext.drawImage(canvas, x, y, width, height, 0, 0, 200, 200);
+            
+            const imageData = croppedCanvas.toDataURL('image/jpeg');
+            processImageData(imageData, false);
+        }
+
+        // Handle file selection
+        function handleFileSelection(event) {
+            const file = event.target.files[0];
+            if (file) {
+                fileName.textContent = file.name;
+                processImageBtn.disabled = false;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    capturedImage.src = e.target.result;
+                    capturedImage.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Process uploaded image
+        function processUploadedImage() {
+            if (!capturedImage.src) return;
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 200;
+            
+            const context = canvas.getContext('2d');
+            context.drawImage(capturedImage, 0, 0, 200, 200);
+            
+            const imageData = canvas.toDataURL('image/jpeg');
+            processImageData(imageData, false);
+        }
+
+        // Process image data by sending to the backend
+        function processImageData(imageData, isRealTime) {
+            // Show loading indicator
+            if (!isRealTime) {
+                loadingElement.style.display = 'block';
+            }
+            
+            // Get the region of interest coordinates
+            const boxRect = cameraBox.getBoundingClientRect();
+            const videoRect = videoElement.getBoundingClientRect();
+            
+            // Calculate ROI for the API request
+            const roi = {
+                x: Math.max(0, boxRect.left - videoRect.left),
+                y: Math.max(0, boxRect.top - videoRect.top),
+                width: boxRect.width,
+                height: boxRect.height
+            };
+            
+            // Send image data to backend API
+            fetch('/api/process-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image_data: imageData,
+                    roi: [roi.x, roi.y, roi.width, roi.height]
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading indicator
+                if (!isRealTime) {
+                    loadingElement.style.display = 'none';
+                }
+                
+                if (data.error) {
+                    console.error('Error:', data.error);
+                    return;
+                }
+                
+                // Process the response
+                updatePrediction(data.letter, data.confidence, isRealTime);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingElement.style.display = 'none';
+                
+                // Fall back to simulation if the API fails
+                if (!isRealTime) {
+                    simulateBackendResponse(isRealTime);
+                }
+            });
+        }
+
+        // Simulate backend response (replace with actual API call in production)
+        function simulateBackendResponse(isRealTime) {
+            // Simulate letters, including special commands
+            const possibleLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'SPACE', 'DEL', 'NOTHING'];
+            
+            // For demonstration, bias toward real letters
+            let letter;
+            const randomVal = Math.random();
+            
+            if (randomVal < 0.7) {
+                // 70% chance of a regular letter
+                letter = possibleLetters[Math.floor(Math.random() * 26)];
+            } else if (randomVal < 0.8) {
+                // 10% chance of SPACE
+                letter = 'SPACE';
+            } else if (randomVal < 0.9) {
+                // 10% chance of DEL
+                letter = 'DEL';
+            } else {
+                // 10% chance of NOTHING
+                letter = 'NOTHING';
+            }
+            
+            // Generate a random confidence score (0.5 - 1.0)
+            const score = Math.random() * 0.5 + 0.5;
+            
+            // Update UI with prediction
+            updatePrediction(letter, score, isRealTime);
+        }
+
+        // Update prediction UI and handle the recognized letter
+        function updatePrediction(letter, score, isRealTime) {
+            letterPrediction.textContent = letter;
+            predictionScore.textContent = `Confidence: ${(score * 100).toFixed(1)}%`;
+            
+            if (letter !== 'NOTHING') {
+                handleRecognizedLetter(letter);
+            }
+        }
+
+        // Handle recognized letter
+        function handleRecognizedLetter(letter) {
+            if (letter === 'SPACE') {
+                addSpace();
+            } else if (letter === 'DEL') {
+                deleteLastLetter();
+            } else {
+                // Add letter to current word
+                currentWordText += letter;
+                currentWord.textContent = currentWordText;
+                
+                // Speak the letter if auto-speak is enabled
+                if (autoSpeakToggle.checked) {
+                    speakLetter(letter);
+                }
+            }
+        }
+
+        // Add a space (complete current word)
+        async function addSpace() {
+            if (currentWordText.length > 0) {
+                let finalWord = currentWordText;
+                
+                // Apply spell check if enabled
+                if (spellCheckToggle.checked) {
+                    finalWord = await correctWord(finalWord);
+                }
+                
+                completedTextContent += (completedTextContent ? ' ' : '') + finalWord;
+                completedText.textContent = completedTextContent;
+                currentWordText = '';
+                currentWord.textContent = '';
+                
+                // Speak the word if auto-speak is enabled
+                if (autoSpeakToggle.checked) {
+                    speakText(finalWord);
+                }
+            }
+        }
+
+        // Delete last letter
+        function deleteLastLetter() {
+            if (currentWordText.length > 0) {
+                currentWordText = currentWordText.slice(0, -1);
+                currentWord.textContent = currentWordText;
+            }
+        }
+
+        // Clear all text
+        function clearText() {
+            completedTextContent = '';
+            currentWordText = '';
+            completedText.textContent = '';
+            currentWord.textContent = '';
+        }
+
+        // Spell checking function that uses the backend API
+        function correctWord(word) {
+            return new Promise((resolve) => {
+                // Call backend API for spell checking
+                fetch('/api/correct-word', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ word: word }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Spell check error:', data.error);
+                        resolve(word); // Return original word on error
+                        return;
+                    }
+                    
+                    resolve(data.corrected);
+                })
+                .catch(error => {
+                    console.error('Spell check error:', error);
+                    
+                    // Fall back to local dictionary if API fails
+                    if (dictionary[word]) {
+                        resolve(dictionary[word]);
+                    } else {
+                        resolve(word);
+                    }
+                });
+            });
+        }
+
+        // Speak text using backend API for better quality
+        function speakText(text) {
+            const textToSpeak = text || (completedTextContent + ' ' + currentWordText).trim();
+            
+            if (textToSpeak) {
+                // Try the backend TTS API first
+                fetch('/api/generate-speech', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: textToSpeak }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('TTS error:', data.error);
+                        // Fall back to Web Speech API
+                        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                        window.speechSynthesis.speak(utterance);
+                        return;
+                    }
+                    
+                    // Play the audio file
+                    const audio = new Audio(data.audio_url);
+                    audio.play();
+                })
+                .catch(error => {
+                    console.error('TTS error:', error);
+                    // Fall back to Web Speech API
+                    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                    window.speechSynthesis.speak(utterance);
+                });
+            }
+        }
+
+        // Speak just a letter
+        function speakLetter(letter) {
+            const utterance = new SpeechSynthesisUtterance(letter);
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Handle window resize to adjust camera box position
+        window.addEventListener('resize', function() {
+            if (stream) {
+                initCameraBox();
+            }
+        });
+    </script>
+</body>
+</html>
