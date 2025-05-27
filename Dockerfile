@@ -11,7 +11,7 @@ COPY backend/requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .   # <== Copy entire repo, so main.py is now at /app/backend/main.py
+COPY . .   
 
 EXPOSE 8000
 
