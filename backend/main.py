@@ -16,8 +16,20 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# Load model and class names once
-model = tf.keras.models.load_model("sign_language_model.h5")
+import os
+import gdown
+
+MODEL_PATH = "sign_language_model.h5"
+DRIVE_FILE_ID = "1V-kGImLFw7Ayn0Jx8ORuy2fydJ4PODK7"
+DRIVE_URL = f"https://drive.google.com/uc?id={DRIVE_FILE_ID}"
+
+if not os.path.exists(MODEL_PATH):
+    print("Downloading model from Google Drive...")
+    gdown.download(DRIVE_URL, MODEL_PATH, quiet=False)
+
+# Now load the model
+model = tf.keras.models.load_model(MODEL_PATH)
+
 class_names = [chr(i) for i in range(65, 65+26)] + ['del', 'nothing', 'space']
 
 class ImageData(BaseModel):

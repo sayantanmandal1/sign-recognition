@@ -10,3 +10,10 @@ pyspellchecker
 opencv-python
 opencv-contrib-python
 gdown
+opencv-python-headless
+numpy
+python-multipart
+gdown
+python-dateutil
+pydantic
+spellchecker
