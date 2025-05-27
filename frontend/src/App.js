@@ -21,49 +21,50 @@ export default function ASLApp() {
 
   // Capture image from video and send to backend
   async function captureAndPredict() {
-    if (!videoRef.current || !canvasRef.current) return;
-    const ctx = canvasRef.current.getContext("2d");
-    ctx.drawImage(videoRef.current, 0, 0, 224, 224);
-    const dataUrl = canvasRef.current.toDataURL("image/jpeg");
+  if (!videoRef.current || !canvasRef.current) return;
+  const ctx = canvasRef.current.getContext("2d");
+  ctx.drawImage(videoRef.current, 0, 0, 224, 224);
+  const dataUrl = canvasRef.current.toDataURL("image/jpeg");
 
-    const payload = { image_data: dataUrl, roi: [0, 0, 224, 224] };
-    try {
-      const res = await fetch("http://localhost:8000/api/predict-sign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      setPrediction(data);
-      setIsConnected(true);
+  const payload = { image_data: dataUrl, roi: [0, 0, 224, 224] };
+  try {
+    const res = await fetch("https://sign-recognition-1.onrender.com/api/predict-sign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    setPrediction(data);
+    setIsConnected(true);
 
-      if (data.letter) {
-        let newText = recognizedText;
-        if (data.letter === "space") newText += " ";
-        else if (data.letter === "del") newText = newText.slice(0, -1);
-        else if (data.letter !== "nothing") newText += data.letter;
+    if (data.letter) {
+      let newText = recognizedText;
+      if (data.letter === "space") newText += " ";
+      else if (data.letter === "del") newText = newText.slice(0, -1);
+      else if (data.letter !== "nothing") newText += data.letter;
 
-        if (spellCheck && newText.trim()) {
-          const words = newText.trim().split(/\s+/);
-          const lastWord = words[words.length - 1];
-          const spellRes = await fetch(
-            `http://localhost:8000/api/spellcheck?word=${lastWord}`
-          );
-          const spellData = await spellRes.json();
-          if (spellData.corrected && spellData.corrected !== lastWord) {
-            words[words.length - 1] = spellData.corrected;
-            newText = words.join(" ") + " ";
-          }
+      if (spellCheck && newText.trim()) {
+        const words = newText.trim().split(/\s+/);
+        const lastWord = words[words.length - 1];
+        const spellRes = await fetch(
+          `https://sign-recognition-1.onrender.com/api/spellcheck?word=${lastWord}`
+        );
+        const spellData = await spellRes.json();
+        if (spellData.corrected && spellData.corrected !== lastWord) {
+          words[words.length - 1] = spellData.corrected;
+          newText = words.join(" ") + " ";
         }
-
-        setRecognizedText(newText);
-        if (autoSpeak) speak(newText);
       }
-    } catch (error) {
-      setIsConnected(false);
-      console.error("Connection error:", error);
+
+      setRecognizedText(newText);
+      if (autoSpeak) speak(newText);
     }
+  } catch (error) {
+    setIsConnected(false);
+    console.error("Connection error:", error);
   }
+}
+
 
   // Start webcam stream
   async function startCamera() {
@@ -104,7 +105,7 @@ export default function ASLApp() {
       const dataUrl = reader.result;
       const payload = { image_data: dataUrl, roi: [0, 0, 224, 224] };
       try {
-        const res = await fetch("http://localhost:8000/api/predict-sign", {
+        const res = await fetch("https://sign-recognition-1.onrender.com/api/predict-sign", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

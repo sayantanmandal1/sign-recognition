@@ -30,3 +30,4 @@ sign-language/trained_model_graph.pb
 sign-language/tf-env
 sign-language/tfenv
 backend/sign_language_model.tflite
+backend/sign_language_model_quant.tflite
