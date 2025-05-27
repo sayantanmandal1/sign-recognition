@@ -1,4 +1,5 @@
-# 🧠 Sign Language Recognition App
+# 🧠 ASL Recognition Studio
+Sign Language Recognition App
 
 This is a full-stack web application for **real-time American Sign Language (ASL) recognition** using a camera or uploaded images. It uses a TensorFlow Lite model to classify hand signs into letters and special tokens (`space`, `del`, `nothing`), spells out words intelligently, and even performs spellchecking.
 
