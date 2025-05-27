@@ -7,3 +7,5 @@ python-multipart
 gtts
 jinja2
 pyspellchecker
+opencv-python
+opencv-contrib-python
