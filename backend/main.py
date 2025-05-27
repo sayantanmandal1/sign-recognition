@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import tensorflow as tf
 import numpy as np
 import cv2
