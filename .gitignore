@@ -1,0 +1,31 @@
+# Ignore large dataset folder completely
+training/dataset/
+
+# Ignore any dataset zip or temp files inside training folder
+training/*.zip
+training/*.tar.gz
+
+# Ignore Python cache files and virtual envs
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+env/
+
+# Ignore node_modules in frontend
+frontend/node_modules/
+
+# Ignore build folders if you want (optional)
+frontend/build/
+backend/__pycache__/
+
+# Ignore model weights downloaded during runtime
+backend/sign_language_model.h5
+sign-language/asl_alphabet_test
+sign-language/asl_alphabet_train
+sign-language/sign_language_model2.h5
+sign-language/trained_model_graph.pb
+sign-language/tf-env
+sign-language/tfenv
