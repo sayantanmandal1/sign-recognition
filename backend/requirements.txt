@@ -16,5 +16,4 @@ python-multipart
 gdown
 python-dateutil
 pydantic
-spellchecker
-indexer
+
